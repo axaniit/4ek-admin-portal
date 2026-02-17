@@ -656,3 +656,12 @@ html body section.portal-hero h1{
   text-align:center !important;
   margin:0 !important;
 }
+#admin-app *{
+  box-sizing: border-box;
+}
+
+/* Prevent overlays from dulling gold */
+html body section.portal-hero::before,
+html body section.portal-hero::after{
+  content:none !important;
+}
