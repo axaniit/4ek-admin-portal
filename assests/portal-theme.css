@@ -595,3 +595,54 @@ html body #admin-app *{
 html body table{
   max-width: 100%;
 }
+/* ==========================================================
+   GOLD FIX (brighter UCF gold + override muddy overlays)
+   Paste at bottom of portal-theme.css
+   ========================================================== */
+
+:root{
+  /* Brighter + cleaner gold */
+  --ucf-gold-1:#ffcf57;   /* highlight */
+  --ucf-gold-2:#c8a64b;   /* core */
+  --ucf-gold-3:#9c7412;   /* deep edge */
+}
+
+/* Kill common “muddying” causes */
+.ucf-topbar, .portal-hero, .ucf-topbar__goldline, .portal-accent-line{
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Force hero to bright gold and CENTER */
+html body .portal-hero{
+  background: linear-gradient(90deg, var(--ucf-gold-3) 0%, var(--ucf-gold-2) 45%, var(--ucf-gold-1) 100%) !important;
+  text-align: center !important;
+}
+html body .portal-hero h1{
+  width: 100% !important;
+  text-align: center !important;
+  margin: 0 !important;
+  color: #111 !important;
+}
+
+/* Force the thin gold lines */
+html body .ucf-topbar__goldline,
+html body .portal-accent-line{
+  background: linear-gradient(90deg, var(--ucf-gold-3), var(--ucf-gold-2), var(--ucf-gold-1)) !important;
+}
+
+/* Force “SEARCH” button and any gold buttons */
+html body .ucf-search__btn,
+html body .btn-gold,
+html body button.btn-gold{
+  background: linear-gradient(90deg, var(--ucf-gold-3) 0%, var(--ucf-gold-2) 60%, var(--ucf-gold-1) 100%) !important;
+  color: #111 !important;
+}
+
+/* Optional: make ALL buttons gold (if you still want that)
+html body button{
+  background: linear-gradient(90deg, var(--ucf-gold-3) 0%, var(--ucf-gold-2) 60%, var(--ucf-gold-1) 100%) !important;
+  color:#111 !important;
+}
+*/
