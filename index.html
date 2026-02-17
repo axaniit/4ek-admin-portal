@@ -1,1 +1,311 @@
-<h1>4EK Portal</h1>
+<!-- ===== 4EK Ambassador Portal Login (POST param student_id) — FULL REPLACE ===== -->
+<meta name="robots" content="noindex, nofollow">
+
+<style>
+  .field{display:block;margin:8px 0;}
+  .input{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-top:6px;}
+  .btn{width:100%;padding:12px;border:0;border-radius:10px;background:#111;color:#fff;cursor:pointer}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .hint{font-size:12px;color:#666;margin-top:6px;line-height:1.35}
+  .hidden{display:none}
+  a{color:#111}
+</style>
+
+<div id="box" style="max-width:460px;margin:24px auto;padding:18px;border:1px solid #e2e2e2;border-radius:12px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.06)">
+  <h2 style="margin:0 0 6px;">4EK Ambassador Portal</h2>
+  <p style="color:#666;margin:0 0 14px;">Login with UCF Email</p>
+
+  <div id="msg" class="hint hidden" style="margin-bottom:12px;"></div>
+
+  <!-- STEP 1 -->
+  <form id="stepLogin">
+    <label class="field">UCF Email
+      <input id="email" type="email" class="input" placeholder="you@ucf.edu" required autocomplete="username">
+    </label>
+    <label class="field">Password
+      <input id="password" type="password" class="input" autocomplete="current-password">
+    </label>
+    <button class="btn" id="btnLogin" type="submit">Continue</button>
+  </form>
+
+  <!-- STEP 2 -->
+  <form id="stepCode" class="hidden">
+    <div class="hint">Enter the 6-digit code sent to your email.</div>
+    <label class="field">Code
+      <input id="code" type="text" maxlength="6" class="input" autocomplete="one-time-code" inputmode="numeric">
+    </label>
+    <button class="btn" id="btnCode" type="submit">Verify</button>
+    <div class="hint" style="margin-top:8px;"><a href="#" id="resend">Resend code</a></div>
+  </form>
+
+  <!-- STEP 3 -->
+  <form id="stepConfirm" class="hidden">
+    <label class="field">Confirm password
+      <input id="newpw" type="password" class="input" autocomplete="new-password">
+    </label>
+    <button class="btn" id="btnConfirm" type="submit">Confirm</button>
+  </form>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const API = "https://script.google.com/macros/s/AKfycbxUUnLnZWfYGe0ZJ5NKtoLXa78qXCK-cEeCv2Ip_3Xm_XUDy-fFp-w0gShBxakcjJdCPg/exec";
+
+// MUST match portals to prevent Neha/Sruthi “swap”
+const SESSION_KEY = "portal_session_v1";
+const LEGACY_KEYS = ["portal_session_v8"];
+
+const URLS = {
+  admin: "https://ucfalumni.com/4ek-ambassadors-admin-portal/",
+  ambassador: "https://ucfalumni.com/4ek-ambassadors-student-portal/"
+};
+
+/*
+  NOTE:
+  We intentionally do NOT show password rules on the page.
+  We keep the existing policy check very light (only blocks blank).
+  If Apps Script enforces complexity, it will respond with weak_password.
+*/
+
+/* ===== UTIL ===== */
+const $ = (id) => document.getElementById(id);
+
+function setMsg(t, ok=false){
+  const el = $("msg");
+  el.classList.remove("hidden");
+  el.style.color = ok ? "#1a7f37" : "#b00020";
+  el.textContent = t;
+}
+function hideMsg(){ $("msg").classList.add("hidden"); $("msg").textContent=""; }
+
+function show(step){
+  ["stepLogin","stepCode","stepConfirm"].forEach(x => $(x).classList.add("hidden"));
+  $(step).classList.remove("hidden");
+}
+
+function clearSessions(){
+  try{ localStorage.removeItem(SESSION_KEY); }catch{}
+  LEGACY_KEYS.forEach(k=>{ try{ localStorage.removeItem(k); }catch{} });
+}
+
+function saveSession(username, role){
+  const payload = { username, role, ts: Date.now() };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+  LEGACY_KEYS.forEach(k=>{ try{ localStorage.setItem(k, JSON.stringify(payload)); }catch{} });
+}
+
+function getEmail(){ return ($("email").value || "").trim().toLowerCase(); }
+function getPW(){ return $("password").value || ""; }
+
+function disableBtn(id,label){
+  const b = $(id);
+  if(!b) return;
+  b.disabled = true;
+  b.dataset.prev = b.textContent;
+  b.textContent = label;
+}
+function enableBtn(id){
+  const b = $(id);
+  if(!b) return;
+  b.disabled = false;
+  if(b.dataset.prev){ b.textContent = b.dataset.prev; delete b.dataset.prev; }
+}
+function enableBtns(){ ["btnLogin","btnCode","btnConfirm"].forEach(enableBtn); }
+
+/* ===== API ===== */
+async function GETJSON(params){
+  const url = API + "?" + new URLSearchParams(params).toString();
+  const r = await fetch(url, { mode:"cors", cache:"no-cache" });
+  const t = await r.text();
+  try { return JSON.parse(t); }
+  catch { return { ok:false, error:"Non-JSON response", body:t, status:r.status }; }
+}
+
+/**
+ * POST without preflight + ALSO puts identifiers in querystring (e.parameter.* compatible).
+ */
+async function POST_PARAM(action, queryParams, bodyObj){
+  const qs = new URLSearchParams({ action, ...(queryParams || {}) }).toString();
+  const url = API + "?" + qs;
+
+  const r = await fetch(url, {
+    method: "POST",
+    mode: "cors",
+    cache: "no-cache",
+    // no headers (avoid preflight)
+    body: JSON.stringify(bodyObj || {})
+  });
+
+  const t = await r.text();
+  try { return JSON.parse(t); }
+  catch { return { ok:false, error:"Non-JSON response", body:t, status:r.status }; }
+}
+
+/* ===== ACTIONS ===== */
+async function doLogin(useNew=false){
+  hideMsg();
+
+  const email = getEmail();
+  if(!email){ setMsg("Enter your UCF email."); return; }
+
+  const pw = useNew ? ($("newpw").value || "") : getPW();
+  if(!pw){ setMsg("Enter your password."); return; }
+
+  disableBtn("btnLogin", "Loading…");
+
+  try{
+    clearSessions();
+
+    // Put student_id/email/username in querystring so Apps Script can read e.parameter.student_id
+    const out = await POST_PARAM(
+      "login",
+      { student_id: email, email: email, username: email },
+      { student_id: email, email: email, username: email, password: pw } // body too
+    );
+
+    console.log("LOGIN response:", out);
+    enableBtns();
+
+    if(out?.ok && out.role){
+      const canonicalEmail = String(out.student_id || out.email || email).trim().toLowerCase();
+      clearSessions();
+      saveSession(canonicalEmail, out.role);
+      location.assign(out.role === "admin" ? URLS.admin : URLS.ambassador);
+      return;
+    }
+
+    if(out?.status === "not_set"){ await sendCode(); return; }
+    if(out?.status === "bad_password"){ setMsg("Incorrect password."); return; }
+    if(out?.error){ setMsg("Login failed: " + out.error); return; }
+
+    setMsg("Login failed. Check console for details.");
+  }catch(err){
+    enableBtns();
+    console.error("Login failed:", err);
+    setMsg("Could not reach the login service. Please try again.");
+  }
+}
+
+async function sendCode(){
+  const email = getEmail();
+  if(!email){ setMsg("Enter email first."); return; }
+
+  disableBtn("btnLogin", "Sending…");
+  try{
+    // If your script recently renamed this action, that would cause "Unknown action"
+    // Keep the canonical name, but fall back to common variants.
+    const candidates = ["sendlogincode","sendLoginCode","send_code","sendcode","login_code_send"];
+    let out = null;
+
+    for(const act of candidates){
+      out = await GETJSON({ action: act, email });
+      console.log("SEND CODE response ("+act+"):", out);
+      if(out?.ok) break;
+      const msg = String(out?.error || out?.message || out?.body || "").toLowerCase();
+      if(!msg.includes("unknown action")) break; // real failure, stop
+    }
+
+    enableBtns();
+
+    if(out?.ok){
+      show("stepCode");
+      setMsg("Code sent. Check your email.", true);
+    } else {
+      setMsg(out?.error || "Could not send code.");
+    }
+  }catch(err){
+    enableBtns();
+    console.error("sendCode failed:", err);
+    setMsg("Could not send code. Please try again.");
+  }
+}
+
+async function verifyCode(){
+  const email = getEmail();
+  const code = ($("code").value || "").trim();
+  if(!email){ setMsg("Enter email first."); show("stepLogin"); return; }
+  if(!code || code.length !== 6){ setMsg("Enter the 6-digit code."); return; }
+
+  disableBtn("btnCode", "Verifying…");
+  try{
+    const candidates = ["verifylogincode","verifyLoginCode","verify_code","verifycode","login_code_verify"];
+    let out = null;
+
+    for(const act of candidates){
+      out = await GETJSON({ action: act, email, code });
+      console.log("VERIFY CODE response ("+act+"):", out);
+      if(out?.ok) break;
+      const msg = String(out?.error || out?.message || out?.body || "").toLowerCase();
+      if(!msg.includes("unknown action")) break;
+    }
+
+    enableBtns();
+
+    if(out?.ok){
+      show("stepConfirm");
+      hideMsg();
+    } else {
+      setMsg(out?.error || "Invalid code.");
+    }
+  }catch(err){
+    enableBtns();
+    console.error("verifyCode failed:", err);
+    setMsg("Could not verify code. Please try again.");
+  }
+}
+
+async function confirmPassword(){
+  const email = getEmail();
+  const pw = ($("newpw").value || "");
+
+  if(!email){ setMsg("Enter email first."); show("stepLogin"); return; }
+  if(!pw){ setMsg("Enter a password to confirm."); return; }
+
+  disableBtn("btnConfirm", "Saving…");
+  try{
+    const candidates = ["setpassword","setPassword","set_pw","setpw","login_set_password"];
+    let out = null;
+
+    for(const act of candidates){
+      out = await POST_PARAM(
+        act,
+        { student_id: email, email: email, username: email },
+        { student_id: email, email: email, username: email, password: pw }
+      );
+      console.log("CONFIRM PASSWORD response ("+act+"):", out);
+
+      if(out?.ok) break;
+      if(out?.status === "weak_password" || out?.status === "not_set" || out?.status === "bad_password") break;
+
+      const msg = String(out?.error || out?.message || out?.body || "").toLowerCase();
+      if(!msg.includes("unknown action")) break;
+    }
+
+    enableBtns();
+
+    if(out?.ok){
+      // Immediately log in with the confirmed password
+      $("password").value = pw;
+      show("stepLogin");
+      await doLogin(false);
+    } else if(out?.status === "weak_password"){
+      // Don't show parameters/rules
+      setMsg("Password could not be confirmed. Please try a different one.");
+    } else {
+      setMsg(out?.error || "Could not confirm password.");
+    }
+  }catch(err){
+    enableBtns();
+    console.error("confirmPassword failed:", err);
+    setMsg("Could not confirm password. Please try again.");
+  }
+}
+
+/* ===== EVENTS ===== */
+$("stepLogin").addEventListener("submit", (e)=>{ e.preventDefault(); doLogin(false); });
+$("stepCode").addEventListener("submit", (e)=>{ e.preventDefault(); verifyCode(); });
+$("resend").addEventListener("click", (e)=>{ e.preventDefault(); sendCode(); });
+$("stepConfirm").addEventListener("submit", (e)=>{ e.preventDefault(); confirmPassword(); });
+
+clearSessions();
+</script>
