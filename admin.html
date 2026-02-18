@@ -178,58 +178,56 @@
     vertical-align: middle !important;
     display: flex;
     justify-content: center;
-    gap: 8px;
+    gap: 12px; /* Space between the check and x */
   }
 
-  /* 2. BASE BUTTON STYLE (Shared) */
-  .actBtn {
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.2s;
-  }
-  .actBtn:hover { opacity: 0.85; }
-
-  /* 3. TABLE ROW BUTTONS ONLY (Transparent Background) */
+  /* 2. TABLE ROW ICONS (Transparent, Just Emoji) */
   .pc-actions-cell .actBtn {
     background-color: transparent !important;
-    width: 44px;
-    height: 44px;
+    border: none !important;
+    box-shadow: none !important;
+    width: 32px;
+    height: 32px;
     padding: 0;
     margin: 0;
-    border-radius: 50%; /* Circular hover area */
-  }
-  .pc-actions-cell .actBtn:hover {
-    background-color: rgba(0,0,0,0.05) !important; /* Faint grey hover */
-  }
-
-  /* 4. BOTTOM BATCH BUTTONS ONLY (Yellow, Rounded, Centered) */
-  #pcApproveSel, #pcDenySel {
-    background-color: #F4CA3D !important; /* Force Yellow */
-    color: #000 !important;
-    border-radius: 8px !important;
-    padding: 10px 20px !important;
-    font-weight: 700 !important;
-    font-size: 13px !important;
-    text-transform: uppercase !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    width: auto !important; /* Allow text to fit */
-    height: auto !important;
-  }
-
-  /* 5. WHITE EMOJI BADGE (Inside Table Buttons) */
-  .emoji-badge {
-    background: #fff;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    cursor: pointer;
+    font-size: 20px; /* Size of the emoji */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    transition: transform 0.1s;
+  }
+  .pc-actions-cell .actBtn:hover {
+    transform: scale(1.2); /* Slight zoom on hover */
+  }
+
+  /* Remove the white badge styling entirely for table icons */
+  .emoji-badge {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-size: 24px; /* Make emoji slightly larger */
+  }
+
+  /* 3. BOTTOM BATCH BUTTONS (Yellow, Large, Rounded) */
+  #pcApproveSel, #pcDenySel {
+    background-color: #F4CA3D !important; /* Force Yellow */
+    color: #000 !important;
+    border: none !important;
+    border-radius: 8px !important;       /* Rounded corners */
+    padding: 12px 24px !important;       /* Larger size */
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    text-transform: uppercase !important;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: inline-block;
+    width: auto;
+  }
+  
+  #pcApproveSel:hover, #pcDenySel:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
   }
 
   /* Admin Comment Input in Table */
