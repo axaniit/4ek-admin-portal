@@ -10,7 +10,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
 
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
 <style>
+  /* Import FullCalendar CSS */
   @import url("https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css");
 
   :root { 
@@ -65,7 +68,7 @@
     padding: 0 16px 40px 16px;
   }
 
-  /* Calendar */
+  /* Calendar Styling */
   #calendar{ min-height: 640px; }
   #calendar, #calendar * { font-family: inherit; }
 
@@ -86,6 +89,7 @@
     .amb-grid{ grid-template-columns: 1fr 1fr; } 
   }
 
+  /* Cards - Height 100% ensures they fill the grid cell */
   .card{
     border:1px solid #e5e5e5;
     border-radius:12px;
@@ -95,7 +99,7 @@
     margin:12px 0;
     display: flex;
     flex-direction: column;
-    height: 100%; /* Fills the grid cell */
+    height: 100%; 
   }
   .card-h{padding:12px 16px;border-bottom:1px solid #eee;font-weight:600}
   .card-b{ 
@@ -119,7 +123,7 @@
     transition: all 0.2s;
   }
   
-  /* When checked */
+  /* Green Check */
   .req-list .box.done {
     border-color: var(--portal-green);
     color: var(--portal-green);
@@ -220,7 +224,7 @@
   .roster{margin:.25rem 0 0;padding-left:18px}
   .cap{margin:8px 0 0;font-weight:600}
 
-  /* FullCalendar */
+  /* FullCalendar overrides */
   .fc, .fc * { pointer-events:auto; }
   .fc-event, .fc-event * { pointer-events:auto !important; }
   .fc .fc-toolbar{
@@ -452,7 +456,6 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 <script>
 /* ===== CONFIG ===== */
 const API = "https://script.google.com/macros/s/AKfycbxUUnLnZWfYGe0ZJ5NKtoLXa78qXCK-cEeCv2Ip_3Xm_XUDy-fFp-w0gShBxakcjJdCPg/exec";
@@ -776,7 +779,7 @@ function startConfetti(){
   window.addEventListener("resize", resize, { passive:true });
 }
 
-/* ===== STATE ===== */
+/* ===== STATE & BOOT ===== */
 let currentStudentId = null;
 let eventsCache = [];
 let calendarInstance = null;
@@ -785,19 +788,62 @@ let _requestsCache = [];
 let _fullHistoryCache = [];
 let _modalEventId = null;
 
-/* ===== BOOT & CALENDAR LOADER ===== */
-function initCalendarSafe(events){
-  // RETRY LOGIC: Wait for FullCalendar global to be ready
-  let attempts = 0;
-  const poller = setInterval(() => {
-    if (window.FullCalendar && window.FullCalendar.Calendar) {
-      clearInterval(poller);
-      buildCalendar(events);
-    } else {
-      attempts++;
-      if (attempts > 30) clearInterval(poller); // Stop after 3s
+/* CALENDAR BUILDER (Waits for Lib) */
+function buildCalendar(events){
+  // If library isn't loaded yet, try again in 200ms (up to 50 times)
+  if (!window.FullCalendar || !window.FullCalendar.Calendar) {
+    if (!window._calRetries) window._calRetries = 0;
+    if (window._calRetries++ < 50) setTimeout(()=>buildCalendar(events), 200);
+    return;
+  }
+
+  const el = document.getElementById("calendar");
+  if (!el) return;
+
+  const fcEvents = (events || []).map(ev => {
+    const category = ev.category || ev.type || "";
+    return {
+      id: String(ev.event_id),
+      title: ev.title,
+      start: ev.start,
+      end: ev.end || null,
+      classNames: [catClass(category)],
+      extendedProps: { ...ev, category }
+    };
+  });
+
+  if (calendarInstance){
+    calendarInstance.removeAllEvents();
+    fcEvents.forEach(evt => calendarInstance.addEvent(evt));
+    calendarInstance.render();
+    return;
+  }
+
+  calendarInstance = new FullCalendar.Calendar(el, {
+    initialView: "dayGridMonth",
+    height: "auto",
+    headerToolbar: {
+      left: "prev,next today",
+      center: "title",
+      right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek"
+    },
+    events: fcEvents,
+    eventClassNames: (arg) => [catClass(arg?.event?.extendedProps?.category)],
+    eventDidMount: (arg) => {
+      try { arg.el.classList.add(catClass(arg.event.extendedProps?.category)); } catch(_) {}
+    },
+    eventClick: async (info) => {
+      const ev = info.event.extendedProps || {};
+      const roster = await GET({ action:"eventroster", event_id: info.event.id });
+      openModal({
+        ev,
+        signupsAccepted: (roster && roster.signups && roster.signups.accepted) || [],
+        signupsWait: (roster && roster.signups && roster.signups.waitlisted) || []
+      });
     }
-  }, 100);
+  });
+
+  calendarInstance.render();
 }
 
 (async function(){
@@ -834,8 +880,8 @@ function initCalendarSafe(events){
   eventsCache = Array.isArray(evResp) ? evResp : (evResp && Array.isArray(evResp.events) ? evResp.events : (evResp && Array.isArray(evResp.rows) ? evResp.rows : []));
   const activeEvents = eventsCache.filter(isActiveEvent);
 
-  /* ✅ START CALENDAR IMMEDIATELY AFTER FETCH (Don't wait for history) */
-  initCalendarSafe(activeEvents);
+  /* ✅ START CALENDAR IMMEDIATELY */
+  buildCalendar(activeEvents);
 
   const reqSel = document.getElementById("reqEvent");
   const btnReq = document.getElementById("btnReq");
