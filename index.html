@@ -5,17 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>4EK Ambassador Portal</title>
 
-  <!-- ===== 4EK Ambassador Portal Login (NETLIFY REDIRECT VERSION) ===== -->
-  <meta name="robots" content="noindex, nofollow">
-
-  <!-- Theme (fake WP look) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/portal-theme.css">
-
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
 
   <!-- Font -->
@@ -23,22 +12,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-  <!-- Theme CSS -->
- <link rel="stylesheet" href="assets/portal-theme.css?v=9999">
-
-  <!-- HARD PROOF OVERRIDES (remove later if you want) -->
-  <style>
-    body{ font-family:"Nunito", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important; }
-    .portal-hero{ background: linear-gradient(90deg,#b88f2c,#c8a64b) !important; }
-  </style>
-
+  <!-- Theme CSS (IMPORTANT: no leading slash for GitHub Pages project sites) -->
+  <link rel="stylesheet" href="assets/portal-theme.css?v=1">
 
   <!-- Login-specific tweaks -->
   <style>
-    /* If your theme sets global body padding, this keeps it clean */
     body{ margin:0; }
 
-    /* Login box uses your existing styles but aligns to theme */
     .field{display:block;margin:10px 0 12px;}
     .input{width:100%;padding:10px 12px;border:1px solid #cfcfcf;border-radius:8px;margin-top:6px;box-sizing:border-box;}
     .btn{width:100%;padding:12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;font-weight:900;letter-spacing:.4px;text-transform:uppercase}
@@ -47,19 +27,8 @@
     .hidden{display:none}
     a{color:#111}
 
-    /* Center area under hero like the old page */
     .login-wrap{ max-width: 980px; margin: 0 auto; padding: 22px 16px 48px; }
     #box{ margin: 18px auto 0 !important; }
-
-    /* Make login look closer to your old gold button vibe (optional) */
-    /* Uncomment if you want CONTINUE to be gold instead of black */
-    /*
-    .btn{
-      background: linear-gradient(90deg, #b88f2c, #c8a64b);
-      color:#111;
-      box-shadow: 0 3px 0 rgba(0,0,0,.20);
-    }
-    */
   </style>
 </head>
 
@@ -120,9 +89,6 @@
   const API = "https://script.google.com/macros/s/AKfycbxUUnLnZWfYGe0ZJ5NKtoLXa78qXCK-cEeCv2Ip_3Xm_XUDy-fFp-w0gShBxakcjJdCPg/exec";
   const SESSION_KEY = "portal_session_v1";
 
-  /* 🔥 HARD-CODED NETLIFY DESTINATION */
-  const NETLIFY_BASE = "https://cool-tarsier-9bfafd.netlify.app";
-
   /* ===== UTIL ===== */
   const $ = (id) => document.getElementById(id);
 
@@ -139,13 +105,28 @@
     localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
   }
 
-  function redirectToPortal(role){
-    const target = role === "admin"
-      ? NETLIFY_BASE + "/admin.html"
-      : NETLIFY_BASE + "/student.html";
+  /**
+   * Host-agnostic base path resolver (works on GitHub Pages project sites)
+   * Examples:
+   * - https://user.github.io/repo/index.html -> base = https://user.github.io/repo
+   * - https://site.netlify.app/index.html     -> base = https://site.netlify.app
+   */
+  function getBase(){
+    const { origin, pathname } = window.location;
+    // remove filename (index.html) if present
+    const dir = pathname.replace(/\/[^\/]*$/, "");
+    // if dir is "" then it’s root; otherwise keep it (GitHub Pages project path)
+    return origin + (dir === "" ? "" : dir);
+  }
 
-    console.log("FORCING redirect to:", target);
-    window.location.href = target; // hard nav
+  function redirectToPortal(role){
+    const base = getBase();
+    const target = role === "admin"
+      ? base + "/admin.html"
+      : base + "/student.html";
+
+    console.log("Redirecting to:", target);
+    window.location.href = target;
   }
 
   /* ===== API ===== */
