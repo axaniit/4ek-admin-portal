@@ -1,96 +1,10 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ===== ADMIN PORTAL v5.9.12 (UI OVERRIDES + EMOJIS) ===== -->
 <meta name="robots" content="noindex, nofollow">
 
+<!-- Load Fonts (Nunito) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="assets/portal-theme.css?v=9999">
-
-<style id="admin-ui-overrides">
-  :root {
-    --ucf-gold: #C9A227;
-    --soft-shadow: 0 8px 22px rgba(0,0,0,.10);
-  }
-
-  /* Font Consistency */
-  body, input, select, textarea, button,
-  .form select, .form input, .form textarea {
-    font-family: "Nunito", system-ui, -apple-system, sans-serif !important;
-  }
-
-  /* Visual Container Enhancements */
-  .card, .hist-card, #pcTableWrap, .shift-admin, .self-actions, .fc .fc-toolbar {
-    box-shadow: var(--soft-shadow) !important;
-    border-color: #e7e7e7 !important;
-  }
-
-  /* Header Typography Fixes */
-  #formRequest h4, #formSignup h4 {
-    font-size: 21px !important;
-    font-weight: 800 !important;
-    margin: .25rem 0 .65rem !important;
-  }
-
-  /* Spacing Adjustments */
-  #formRequest .grid2 > .muted.small,
-  #formSignup .grid2 > .muted.small {
-    padding-left: 5px !important;
-  }
-
-  /* Global Button Styling - Uppercase + Size +2px */
-  button, .btnPrimary, .secondary, .form button, .pp-btn {
-    text-transform: uppercase !important;
-    letter-spacing: .02em;
-    font-size: 16px !important; 
-    transition: filter 0.2s ease;
-  }
-
-  .btnPrimary, .form button {
-    padding: 12px 16px !important;
-    border-radius: 10px !important;
-  }
-
-  .secondary {
-    padding: 10px 12px !important;
-    border-radius: 10px !important;
-  }
-
-  /* Pending Center - Gold Theme */
-  #pcRefresh {
-    background: var(--ucf-gold) !important;
-    color: #111 !important;
-    border: 1px solid rgba(0,0,0,0.15) !important;
-  }
-
-  .pcIcon {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 12px !important;
-    background: var(--ucf-gold) !important;
-    border: 1px solid rgba(0,0,0,0.18) !important;
-    color: #111 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .pcIcon:hover, #pcRefresh:hover {
-    filter: brightness(0.95);
-  }
-
-  /* Table Polish */
-  .ptable th {
-    text-transform: uppercase;
-    letter-spacing: .02em;
-    font-size: 12px;
-    color: #666;
-  }
-
-  /* Event Editor Spacing */
-  #eventForm label { margin: 10px 0 !important; }
-  #eventForm > div { gap: 16px !important; }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <div id="admin-app" style="max-width:1100px;margin:0 auto;">
   <header class="amb-top">
@@ -101,11 +15,13 @@
     <div class="hours">
       <div class="muted">My Semester Total Hours</div>
       <div class="h-big" id="meHoursTotal">0</div>
-      <div class="muted small" id="meHoursSub">Spring2026</div>
+      <div class="muted small" id="meHoursSub" style="margin-top:2px;">Spring2026</div>
     </div>
   </header>
 
+  <!-- TOP GRID: Quick Actions + Pending Center side-by-side (stretch equal height) -->
   <section class="top-grid">
+    <!-- Quick Actions -->
     <div class="card">
       <div class="card-h">Quick Actions (My Requests)</div>
       <div class="card-b">
@@ -114,23 +30,474 @@
           <label>Choose event
             <select id="reqEvent"></select>
           </label>
+
+          <!-- SHIFT PICKER (shown only when shifts exist) -->
           <label id="reqShiftWrap" style="display:none;">Shift
             <select id="reqShift"></select>
             <div class="muted small" id="reqShiftHint" style="margin-top:6px;"></div>
           </label>
+
           <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <label>Requested hours
-              <input id="reqHours" type="number" step="0.25" min="0">
+            <label>Requested hours (optional)
+              <input id="reqHours" type="number" step="0.25" min="0" placeholder="e.g., 3">
             </label>
             <div class="muted small" style="display:flex;align-items:center;">
               If you didn’t attend the full time, enter how many hours you did attend.
             </div>
           </div>
+          <label>Comment (notes, times you’re available, etc.)
+            <textarea id="reqComment" rows="2" placeholder="I can work 2–4pm because …"
+              style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;"></textarea>
+          </label>
           <button id="btnReq" type="submit">Submit request</button>
+          <div class="msg" id="msgReq"></div>
+        </form>
+
+        <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
+
+        <form id="formSignup" class="form" autocomplete="off">
+          <h4>Event Sign-Up</h4>
+          <label>Choose event
+            <select id="signupEvent"></select>
+          </label>
+
+          <!-- SHIFT PICKER (shown only when shifts exist) -->
+          <label id="suShiftWrap" style="display:none;">Shift
+            <select id="suShift"></select>
+            <div class="muted small" id="suShiftHint" style="margin-top:6px;"></div>
+          </label>
+
+          <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <label>Requested hours (optional)
+              <input id="suHours" type="number" step="0.25" min="0" placeholder="e.g., 3">
+            </label>
+            <div class="muted small" style="display:flex;align-items:center;">
+              If you plan to attend part of the time, enter the hours here.
+            </div>
+          </div>
+          <label>Comment (notes, times you’re available, etc.)
+            <textarea id="suComment" rows="2" placeholder="I’m available after class at 3:30…"
+              style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;"></textarea>
+          </label>
+          <button id="btnSignup" type="submit">Sign up</button>
+          <div class="msg" id="msgSignup"></div>
+        </form>
+
+        <hr style="margin:16px 0;border:none;border-top:1px solid #eee;">
+
+        <!-- ===== MY HISTORY (table style like student version) ===== -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <h4 style="margin:.25rem 0;">My History</h4>
+            <button id="btnMeRefresh" type="button" class="secondary"
+              style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;">
+              Refresh
+            </button>
+          </div>
+
+          <div class="muted small" style="margin-bottom:10px;">
+            This shows your <b>requests</b> and your <b>approved attendance</b>. Totals only include approved attendance hours.
+          </div>
+
+          <div class="hist-top">
+            <div class="hist-card">
+              <div class="muted small">Semester</div>
+              <select id="histSem" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;"></select>
+            </div>
+            <div class="hist-card">
+              <div class="muted small">Semester Total (approved)</div>
+              <div class="hist-big" id="histSemTotal">0</div>
+            </div>
+            <div class="hist-card">
+              <div class="muted small">All-Time Total (approved)</div>
+              <div class="hist-big" id="histAllTotal">0</div>
+            </div>
+          </div>
+
+          <!-- Always-scroll wrapper -->
+          <div class="hist-scroll" style="margin-top:10px;">
+            <table class="hist-table">
+              <thead>
+                <tr>
+                  <th style="min-width:140px;">Semester</th>
+                  <th style="min-width:220px;">Event</th>
+                  <th style="min-width:160px;">Date</th>
+                  <th style="min-width:90px;">Hours</th>
+                  <th style="min-width:90px;">Status</th>
+                  <th style="min-width:260px;">Comments</th>
+                </tr>
+              </thead>
+              <tbody id="histRows">
+                <tr><td colspan="6" class="muted small">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="msg" id="msgHist" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Center -->
+    <div class="card" id="pcCard">
+      <div class="card-h">Pending Center (All Events)</div>
+      <div class="card-b" id="pcCardBody">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+          <button id="pcRefresh" class="btnPrimary" type="button">Refresh</button>
+          <input id="pcSearch" placeholder="Search student / event / comment…" style="flex:1;min-width:220px;padding:8px;border:1px solid #ccc;border-radius:8px">
+          <select id="pcEvent" style="min-width:220px;padding:8px;border:1px solid #ccc;border-radius:8px">
+            <option value="">All events</option>
+          </select>
+          <select id="pcCat" style="min-width:160px;padding:8px;border:1px solid #ccc;border-radius:8px">
+            <option value="">All categories</option>
+            <option>Socials</option>
+            <option>Events</option>
+            <option>Meetings</option>
+            <option>Deadlines</option>
+          </select>
+        </div>
+
+        <div id="pcStatus" class="muted small" style="margin-bottom:8px;">Loading…</div>
+
+        <!-- Scroll container: vertical + horizontal -->
+        <div id="pcTableWrap">
+          <table class="ptable">
+            <thead>
+              <tr>
+                <th style="width:28px"><input type="checkbox" id="pcAll"></th>
+                <th>Event</th>
+                <th>Student</th>
+                <th>Requested hours</th>
+                <th>comments</th>
+                <th>admin_comment</th>
+                <th style="min-width:100px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pcBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Buttons centered -->
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+          <button id="pcApproveSel" type="button" class="secondary">Approve selected</button>
+          <button id="pcDenySel" type="button" class="secondary">Deny selected</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calendar -->
+  <div class="card">
+    <div class="card-h">Calendar (click an event)</div>
+    <div class="card-b"><div id="calendar"></div></div>
+  </div>
+
+  <!-- Create / Update Event -->
+  <div class="card" id="evCard">
+    <div class="card-h">Create / Update Event</div>
+    <div class="card-b">
+      <div class="ev-scroll">
+        <form id="eventForm" class="form" autocomplete="off" onsubmit="return false;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;min-width:980px;padding-bottom:6px;">
+            <label>Event ID <input id="ev_id" placeholder="EVT001" required></label>
+            <label>Title <input id="ev_title" required></label>
+
+            <label>Category
+              <select id="ev_cat">
+                <option>Socials</option>
+                <option>Events</option>
+                <option>Meetings</option>
+                <option>Deadlines</option>
+              </select>
+            </label>
+
+            <label>Signup Capacity (0=unlimited) <input id="ev_cap" type="number" value="0"></label>
+
+            <label>Start <input id="ev_start" type="datetime-local" required></label>
+            <label>End <input id="ev_end" type="datetime-local"></label>
+
+            <label>Location <input id="ev_loc"></label>
+            <label>Hours Value <input id="ev_hours" type="number" step="0.25" value="0"></label>
+          </div>
+
+          <label style="margin-top:10px;">Notes
+            <input id="ev_notes">
+          </label>
+
+          <!-- ===== SHIFT (CREATE/EDIT) ===== -->
+          <div class="shift-admin" style="margin-top:16px;">
+            <div class="shift-admin-top">
+              <label style="display:flex;align-items:center;gap:10px;margin:0;">
+                <input id="ev_hasShifts" type="checkbox" style="width:auto;">
+                <span style="font-weight:700;">This event uses shifts</span>
+              </label>
+
+              <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                <button id="ev_addShift" type="button" class="secondary" style="display:none;">Add shift</button>
+                <button id="ev_removeAllShifts" type="button" class="secondary" style="display:none;">Remove all shifts</button>
+              </div>
+            </div>
+
+            <div id="ev_shiftsBox" style="display:none;margin-top:10px;">
+              <label style="display:flex;align-items:center;gap:10px;margin:0 0 10px;">
+                <input id="ev_shiftsRequired" type="checkbox" style="width:auto;">
+                <span>Shift selection required (for sign-ups / requests)</span>
+              </label>
+
+              <div class="muted small" style="margin-bottom:10px;">
+                Shifts are <b>not shown on the calendar</b>. They only appear after you click an event (dropdown in the event modal).
+                You can leave this section empty if there aren’t shifts.
+              </div>
+
+              <div class="shift-scroll">
+                <table class="shift-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width:160px;">Shift title</th>
+                      <th style="min-width:190px;">Start</th>
+                      <th style="min-width:190px;">End</th>
+                      <th style="min-width:140px;">Capacity</th>
+                      <th style="min-width:110px;">Active</th>
+                      <th style="min-width:120px;">Remove</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ev_shiftsBody"></tbody>
+                </table>
+              </div>
+
+              <div class="muted small" id="ev_shiftStatus" style="margin-top:8px;"></div>
+            </div>
+          </div>
+
+          <button type="button" id="saveEventBtn">Save Event</button>
+          <span class="msg" id="evMsg"></span>
         </form>
       </div>
     </div>
-    </section>
+  </div>
+
+  <!-- Requirements -->
+  <div class="card">
+    <div class="card-h">Requirements (Admin)</div>
+    <div class="card-b">
+      <div class="muted small" style="margin-bottom:10px;">
+        Load a student, then check/uncheck requirements. Changes save immediately.
+      </div>
+
+      <label style="display:block;font-weight:600;">Find Student</label>
+      <input id="rq_search" placeholder="Type email or name…" list="rq_students"
+             style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;">
+      <datalist id="rq_students"></datalist>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+        <button id="rq_load" type="button" class="secondary"
+                style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;">
+          Load
+        </button>
+        <button id="rq_check_all" type="button" class="secondary"
+                style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;">
+          Check all
+        </button>
+        <button id="rq_uncheck_all" type="button" class="secondary"
+                style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;">
+          Uncheck all
+        </button>
+      </div>
+
+      <div id="rq_sel" style="margin-top:10px;font-size:14px;"></div>
+      <div id="rq_status" class="muted small" style="margin-top:6px;">Ready</div>
+
+      <div id="rq_list" style="margin-top:12px;border:1px solid #eee;border-radius:10px;min-height:120px;"></div>
+    </div>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<!-- ===== FULL-SCREEN CONFETTI OVERLAY ===== -->
+<div id="confettiOverlay" style="display:none;position:fixed;inset:0;pointer-events:none;z-index:10001;">
+  <canvas id="confettiCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+</div>
+
+<!-- ===== CONFETTI POPUP (CONFIRMATION MODAL) ===== -->
+<div id="confettiModal" class="modal" style="display:none;">
+  <div class="modal-dialog" style="width:min(560px,100%);position:relative;">
+    <div class="modal-h">
+      <div id="cTitle">Success 🎉</div>
+      <button class="x" onclick="closeConfetti()">×</button>
+    </div>
+    <div class="modal-b" style="position:relative;">
+      <div id="cBody" style="position:relative;">Done.</div>
+    </div>
+    <div class="modal-f">
+      <button class="secondary" onclick="closeConfetti()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STUDENT-STYLE POPUP (shared) ===== -->
+<div id="portalPopup" class="pp-wrap" style="display:none;">
+  <div class="pp-card" role="dialog" aria-modal="true" aria-labelledby="ppTitle">
+    <div class="pp-icon" id="ppIcon" aria-hidden="true">✓</div>
+    <div class="pp-title" id="ppTitle">Done</div>
+    <div class="pp-msg" id="ppMsg">—</div>
+    <div class="pp-actions">
+      <button id="ppOk" class="pp-btn" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT MODAL -->
+<div id="eventModal" class="modal" style="display:none;">
+  <div class="modal-dialog">
+    <div class="modal-h">
+      <div id="mTitle">Event</div>
+      <button class="x" id="mClose" type="button">×</button>
+    </div>
+    <div class="modal-b">
+      <div id="mWhen"></div>
+      <div id="mWhere" class="muted"></div>
+      <div id="mDesc" class="muted"></div>
+      <div id="mCap" class="cap"></div>
+
+      <!-- SHIFT PICKER (modal) -->
+      <div id="mShiftWrap" class="self-actions" style="display:none;margin-top:10px;">
+        <div class="muted small" style="margin-bottom:6px;">This event uses shifts:</div>
+        <label style="margin:0;">Shift
+          <select id="mShift" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;"></select>
+        </label>
+        <div class="muted small" id="mShiftHint" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="self-actions">
+        <div class="muted small" style="margin-bottom:6px;">Quick action for you (admin) on this event:</div>
+        <div class="self-row">
+          <label style="margin:0;">Hours (optional)
+            <input id="mMyHours" type="number" step="0.25" min="0" placeholder="e.g., 2.5">
+          </label>
+          <label style="margin:0;">Comment (optional)
+            <input id="mMyComment" type="text" placeholder="Notes…">
+          </label>
+        </div>
+        <div class="self-btns">
+          <button id="mBtnSignupMe" class="btnPrimary" type="button">Sign up (me)</button>
+          <button id="mBtnRequestMe" class="btnPrimary" type="button">Request Attendance (me)</button>
+          <span class="muted small" id="mMyStatus" style="margin-left:8px;"></span>
+        </div>
+      </div>
+
+      <div class="rosters">
+        <div>
+          <h5>Approved Attendance</h5>
+          <div class="muted small">These entries already count toward hours.</div>
+          <ul id="mApproved" class="roster"></ul>
+        </div>
+        <div>
+          <h5>Sign-ups</h5>
+          <div class="muted small">Sign-ups don’t affect hours.</div>
+          <ul id="mSignups" class="roster"></ul>
+
+          <h6 class="muted" id="waitHdr" style="display:none;margin-top:8px;">Waitlist</h6>
+          <ul id="mWait" class="roster"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="modal-f">
+      <button class="secondary" id="loadToFormBtn" type="button">Load into event editor</button>
+      <button class="secondary" id="closeBtn" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @import url("https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css");
+
+  #calendar{ min-height: 640px; }
+  #calendar, #calendar * { font-family: inherit; }
+
+  .amb-top{display:flex;justify-content:space-between;align-items:flex-end;margin:8px 0 16px}
+  .muted{color:#666}.small{font-size:12px}.h-name{font-weight:600;font-size:18px}
+  .h-big{font-size:40px;font-weight:700}.hours{text-align:right}
+
+  .top-grid{display:grid;gap:16px;margin:0 0 16px;align-items:stretch}
+  @media (min-width: 980px){ .top-grid{ grid-template-columns: 1fr 1fr; } }
+  .top-grid > .card{ height:100%; display:flex; flex-direction:column; }
+  .top-grid > .card .card-b{ flex:1; min-height:0; }
+
+  .card{border:1px solid #e5e5e5;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.04);overflow:hidden;background:#fff;margin:12px 0}
+  .card-h{padding:12px 16px;border-bottom:1px solid #eee;font-weight:600}
+  .card-b{padding:16px}
+
+  .form h4{margin:.25rem 0 .5rem}
+  .form label{display:block;margin:8px 0}
+  .form select, .form input, .form textarea{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px}
+  .form button{margin-top:6px;padding:10px 14px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer}
+  .form button:hover{opacity:.9}
+  .form button:disabled{opacity:.6;cursor:not-allowed}
+
+  .btnPrimary{padding:10px 14px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer}
+  .secondary{padding:8px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer}
+  .secondary:hover{background:#fafafa}
+
+  .msg{margin-top:8px;font-size:13px}.ok{color:#1a7f37}.err{color:#b00020}
+
+  .rq-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid #f4f4f4}
+  .rq-row:last-child{border-bottom:none}
+  .rq-lbl{display:flex;align-items:flex-start;gap:10px}
+  .rq-meta{color:#666;font-size:12px;margin-top:2px}
+  .rq-pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #e6e6e6;font-size:12px}
+
+  .ptable{width:100%;border-collapse:collapse}
+  .ptable th,.ptable td{padding:8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #e6e6e6;font-size:12px}
+  .actBtn{padding:6px 10px;border:0;border-radius:8px;cursor:pointer}
+  .approve{background:#0f7b3d;color:#fff}
+  .deny{background:#b00020;color:#fff}
+  
+  /* Pending Center: make table area scroll vertically + horizontally */
+  #pcCardBody{display:flex;flex-direction:column;min-height:0}
+  #pcTableWrap{
+    flex:1;
+    min-height:0;
+    overflow:auto;
+    border:1px solid #eee;
+    border-radius:10px;
+  }
+
+  /* ===== CREATE/EDIT EVENT: FORCE H-SCROLL ===== */
+  .ev-scroll{
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding-bottom:6px;
+  }
+  .ev-scroll::-webkit-scrollbar{ height:10px }
+  .ev-scroll::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.22); border-radius:999px }
+  .ev-scroll::-webkit-scrollbar-track{ background:rgba(0,0,0,.05); border-radius:999px }
+
+  /* ===== SHIFT EDITOR ===== */
+  .shift-admin{
+    margin-top:12px;
+    border:1px solid #eee;
+    border-radius:12px;
+    background:#fafafa;
+    padding:12px;
+  }
+  .shift-admin-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .shift-scroll{
+    overflow:auto;
+    border:1px solid #eee;
+    border-radius:12px;
+    background:#fff;
+  }
+  .shift-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:880px;
+  }
+  .shift-table th,.shift-table td{
+    padding:10px 8px;
+    border-bottom:1px solid
