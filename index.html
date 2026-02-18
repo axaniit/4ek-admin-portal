@@ -14,83 +14,107 @@
   <!-- Theme -->
   <link rel="stylesheet" href="assets/portal-theme.css?v=4">
 
-  <style>
-    :root{
-      --brand-yellow:#f4ca3d;
-    }
+ <style>
+  body{
+    margin:0;
+    font-family:"Nunito", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
 
-    body{ margin:0; font-family:"Nunito", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  /* ========= HERO (FORCED) ========= */
 
-    /* HERO BAR */
-    section.portal-hero{
-      background: var(--brand-yellow) !important;
-      padding: 35px 16px !important; /* thicker by ~3px */
-      text-align:center !important;
-    }
+  section.portal-hero{
+    background:#F4CA3D !important;        /* HARD color */
+    background-image:none !important;     /* kill gradients */
+    min-height:110px !important;          /* thicker hero */
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    text-align:center !important;
+    padding:0 !important;                 /* remove theme padding */
+  }
 
-    section.portal-hero h1{
-      font-family:"Montserrat", sans-serif !important;
-      font-size:43px !important; /* +3px */
-      font-weight:800 !important;
-      margin:0 !important;
-      color:#111 !important;
-      text-align:center !important;
-    }
+  section.portal-hero h1{
+    font-family:"Montserrat", sans-serif !important;
+    font-size:44px !important;            /* slightly larger */
+    font-weight:800 !important;
+    margin:0 !important;
+    color:#111 !important;
+  }
 
-    /* Accent line under hero */
-    .portal-accent-line{
-      height:4px !important;
-      background: var(--brand-yellow) !important;
-    }
+  /* Accent line under hero */
+  .portal-accent-line{
+    height:6px !important;                /* thicker line */
+    background:#F4CA3D !important;
+  }
 
-    /* Second title inside box */
-    #box h2{
-      font-family:"Montserrat", sans-serif !important;
-      font-size:27px !important; /* +3px */
-      font-weight:800 !important;
-      margin:0 0 6px !important;
-      color:#111 !important;
-    }
+  /* Second title inside box */
+  #box h2{
+    font-family:"Montserrat", sans-serif !important;
+    font-size:28px !important;
+    font-weight:800 !important;
+    margin:0 0 6px !important;
+    color:#111 !important;
+  }
 
-    /* Login layout */
-    .login-wrap{ max-width: 980px; margin: 0 auto; padding: 22px 16px 48px; }
-    #box{ margin: 18px auto 0 !important; }
+  /* ========= LOGIN FORM ========= */
 
-    /* Inputs + labels stay Nunito */
-    .field{display:block;margin:10px 0 12px;font-weight:600;}
-    .input{
-      width:100%;
-      padding:10px 12px;
-      border:1px solid #cfcfcf;
-      border-radius:8px;
-      margin-top:6px;
-      box-sizing:border-box;
-      font-family:"Nunito", sans-serif;
-    }
+  .login-wrap{
+    max-width:980px;
+    margin:0 auto;
+    padding:22px 16px 48px;
+  }
 
-    /* Continue button */
-    #btnLogin{
-      width:100%;
-      padding:12px;
-      border:0;
-      border-radius:8px;
-      background: var(--brand-yellow) !important;
-      color:#111 !important;
-      cursor:pointer;
-      font-weight:600 !important; /* thinner than bold but not light */
-      letter-spacing:.3px;
-      text-transform:uppercase;
-      box-shadow:0 3px 0 rgba(0,0,0,.18);
-    }
+  #box{
+    margin:24px auto 0 !important;
+  }
 
-    #btnLogin:disabled{
-      opacity:.6;
-      cursor:not-allowed;
-    }
+  .field{
+    display:block;
+    margin:10px 0 12px;
+    font-weight:600;
+  }
 
-    .hint{font-size:12px;color:#666;margin-top:6px;line-height:1.35}
-    .hidden{display:none}
-  </style>
+  .input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid #cfcfcf;
+    border-radius:8px;
+    margin-top:6px;
+    box-sizing:border-box;
+    font-family:"Nunito", sans-serif;
+  }
+
+  /* Continue Button */
+  #btnLogin{
+    width:100%;
+    padding:14px;                         /* slightly taller */
+    border:0;
+    border-radius:8px;
+    background:#F4CA3D !important;         /* HARD yellow */
+    background-image:none !important;
+    color:#111 !important;
+    cursor:pointer;
+    font-weight:600 !important;            /* medium, not thin */
+    letter-spacing:.3px;
+    text-transform:uppercase;
+    box-shadow:0 3px 0 rgba(0,0,0,.18);
+  }
+
+  #btnLogin:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+  }
+
+  .hint{
+    font-size:12px;
+    color:#666;
+    margin-top:6px;
+    line-height:1.35;
+  }
+
+  .hidden{display:none;}
+</style>
+
 </head>
 
 <body>
