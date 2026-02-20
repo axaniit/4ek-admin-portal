@@ -2658,35 +2658,43 @@ function initPendingCenter(activeEvents){
     return (row.querySelector(".admin-reply-input")?.value || "").trim();
   }
 
-  async function doApprove(row, reply){
+    // ✅ FIX: Use backend-standard "decide" action instead of attendance_approve / deny variants.
+  // This prevents: "Unknown POST action: attendance_approve"
+  function getReqId(row){
+    return row?.request_id ?? row?.requestId ?? row?.id ?? row?.row_id ?? row?._id ?? null;
+  }
+
+  async function doDecide(row, decision, reply){
+    const request_id = getReqId(row);
+
+    // Payload includes request_id (best), plus student_id/event_id as fallback matching keys.
+    const payload = {
+      decision: decision,                  // "approve" | "deny"
+      request_id: request_id,              // preferred
+      student_id: getReqStudent(row),      // fallback
+      event_id: getReqEventId(row),        // fallback
+      shift_id: row.shift_id ?? row.shiftId ?? null,
+      admin_comment: (reply || "").trim(),
+      decided_by: currentAdminId || "admin",
+      notify: true,
+      source: "portal_admin",
+      current_semester: CURRENT_SEMESTER
+    };
+
+    // Try the most-likely backend actions FIRST.
+    // Keep a couple fallbacks, but avoid the old attendance_approve names that are failing.
     return POST_tryActions(
-      ["approve","approve_request","approverequest","setrequestapproved","set_request_approved","request_approve","attendanceapprove","attendance_approve"],
-      {
-        student_id: getReqStudent(row),
-        event_id: getReqEventId(row),
-        shift_id: row.shift_id ?? row.shiftId ?? null,
-        request_id: row.request_id ?? row.id ?? row.row_id ?? row._id ?? null,
-        admin_comment: reply,
-        notify: true,
-        source: "portal_admin",
-        current_semester: CURRENT_SEMESTER
-      }
+      ["decide", "request_decide", "attendance_decide", "decision", "set_decision"],
+      payload
     );
   }
+
+  async function doApprove(row, reply){
+    return doDecide(row, "approve", reply);
+  }
+
   async function doDeny(row, reply){
-    return POST_tryActions(
-      ["deny","deny_request","denyrequest","setrequestdenied","set_request_denied","request_deny","attendancedeny","attendance_deny"],
-      {
-        student_id: getReqStudent(row),
-        event_id: getReqEventId(row),
-        shift_id: row.shift_id ?? row.shiftId ?? null,
-        request_id: row.request_id ?? row.id ?? row.row_id ?? row._id ?? null,
-        admin_comment: reply,
-        notify: true,
-        source: "portal_admin",
-        current_semester: CURRENT_SEMESTER
-      }
-    );
+    return doDecide(row, "deny", reply);
   }
 
   async function approveOne(renderIdx){
