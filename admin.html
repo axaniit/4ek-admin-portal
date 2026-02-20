@@ -72,12 +72,12 @@
   .h-big{font-size:40px;font-weight:700;margin-top:4px}
   .hours{text-align:right}
 
-  /* Grid Layout - REMOVED FIXED HEIGHTS TO FIX OVERLAP */
+  /* Grid Layout */
   .top-grid{
     display:grid;
     gap:16px;
     margin:0 0 16px;
-    align-items:start; /* Changed from stretch to start to prevent forcing height */
+    align-items:start;
   }
   @media (min-width: 980px){ 
     .top-grid{ grid-template-columns: 1fr 1fr; } 
@@ -96,7 +96,7 @@
   .card-h{padding:12px 16px;border-bottom:1px solid #eee;font-weight:600}
   .card-b{
     padding:16px;
-    flex: 1; /* Allows body to fill space if needed, but not force squash */
+    flex: 1;
   }
 
   /* Forms & Inputs */
@@ -104,7 +104,7 @@
   .form label{display:block;margin:8px 0}
   .form select, .form input, .form textarea{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px; font-family: inherit; box-sizing: border-box;}
   
-  /* MAIN BUTTONS (Black, Caps) */
+  /* MAIN BUTTONS */
   .form button, #btnReq, #btnSignup {
     margin-top:6px;
     padding:12px 16px;
@@ -122,7 +122,7 @@
   .form button:hover {opacity:.9}
   .form button:disabled {opacity:.6;cursor:not-allowed}
 
-  /* PENDING REFRESH (Yellow) */
+  /* PENDING REFRESH */
   #pcRefresh {
     padding:10px 14px;
     border:0;
@@ -134,7 +134,7 @@
   }
   #pcRefresh:hover { opacity: .9; }
 
-  /* HISTORY REFRESH (Small White) */
+  /* HISTORY REFRESH */
   #btnMeRefresh {
     padding: 6px 10px !important;
     font-size: 12px !important;
@@ -169,17 +169,14 @@
   .ptable tbody tr:nth-child(even) { background: #f9f9f9; }
 
   /* PENDING CENTER ACTIONS */
-
-  /* 1. TABLE CELL ALIGNMENT (Centers the Emoji Buttons) */
   .pc-actions-cell {
     text-align: center !important;
     vertical-align: middle !important;
     display: flex;
     justify-content: center;
-    gap: 12px; /* Space between the check and x */
+    gap: 12px; 
   }
 
-  /* 2. TABLE ROW ICONS (Transparent, Just Emoji) */
   .pc-actions-cell .actBtn {
     background-color: transparent !important;
     border: none !important;
@@ -189,31 +186,29 @@
     padding: 0;
     margin: 0;
     cursor: pointer;
-    font-size: 20px; /* Size of the emoji */
+    font-size: 20px; 
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.1s;
   }
   .pc-actions-cell .actBtn:hover {
-    transform: scale(1.2); /* Slight zoom on hover */
+    transform: scale(1.2);
   }
 
-  /* Remove the white badge styling entirely for table icons */
   .emoji-badge {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
-    font-size: 24px; /* Make emoji slightly larger */
+    font-size: 24px; 
   }
 
-  /* 3. BOTTOM BATCH BUTTONS (Yellow, Large, Rounded) */
   #pcApproveSel, #pcDenySel {
-    background-color: #F4CA3D !important; /* Force Yellow */
+    background-color: #F4CA3D !important; 
     color: #000 !important;
     border: none !important;
-    border-radius: 8px !important;       /* Rounded corners */
-    padding: 12px 24px !important;       /* Larger size */
+    border-radius: 8px !important;       
+    padding: 12px 24px !important;       
     font-weight: 700 !important;
     font-size: 14px !important;
     text-transform: uppercase !important;
@@ -228,7 +223,6 @@
     transform: translateY(-1px);
   }
 
-  /* Admin Comment Input in Table */
   .admin-reply-input {
     width: 100%;
     padding: 8px;
@@ -238,7 +232,6 @@
     box-sizing: border-box;
   }
 
-  /* History Table Status Badge */
   .emoji-bg { 
     background: #fff; 
     border-radius: 50%; 
@@ -1746,7 +1739,6 @@ function autofillEventIdIfEmpty(){
 
     const sess = getSession();
     
-    // Fallback included so data actually loads while testing without a session key
     currentAdminId = String(sess.username || sess.student_id || sess.studentId || sess.email || "test_admin@example.com").trim();
 
     if (!currentAdminId){
@@ -2100,6 +2092,22 @@ async function refreshMe(){
       event_start: r.event_start || ev?.start || r.start || r.created_at || ""
     }
   });
+
+  // ========== DEDUPLICATION FIX START ==========
+  // Find all events (and shifts) that are already in the "approved attendance" list.
+  const attKeys = new Set(_meHistAttendance.map(a => {
+    const eId = String(a.event_id || a.eventId || "").trim();
+    const sId = String(a.shift_id || a.shiftId || "").trim();
+    return eId + "::" + sId;
+  }));
+
+  // Filter out any requests that already have a corresponding approved attendance record.
+  _meHistRequests = _meHistRequests.filter(r => {
+    const eId = String(r.event_id || r.eventId || r.event || "").trim();
+    const sId = String(r.shift_id || r.shiftId || "").trim();
+    return !attKeys.has(eId + "::" + sId);
+  });
+  // ========== DEDUPLICATION FIX END ==========
 
   _meHistFull = [..._meHistAttendance, ..._meHistRequests];
 
